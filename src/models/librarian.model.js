@@ -18,6 +18,10 @@ const LibrarianSchema = new Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    default: 'librarian',
+  },
 }, { timestamps: true });
 
 const Librarian = mongoose.model('Librarian', LibrarianSchema);

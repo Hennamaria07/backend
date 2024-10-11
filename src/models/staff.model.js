@@ -14,6 +14,10 @@ const StaffSchema = new Schema({
     publicId: String,
     url: String,
   },
+  role: {
+    type: String,
+    default: 'staff',
+  },
   password: {
     type: String,
     required: true,
