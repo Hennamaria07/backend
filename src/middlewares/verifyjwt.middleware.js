@@ -59,3 +59,38 @@ export const verifyUser = async (req, res, next) => {
     }
 };
 
+export const authorizedAdmin = async (req, res, next) => {
+    if(req.user && req.user.role === 'admin') {
+        next()
+    } else {
+        return res.status(401).json({
+            success: false,
+            message:"Not authorized as an admin",
+            isAuthenticated: false
+        });
+    }
+}
+
+export const authorizedLibrarian = async (req, res, next) => {
+    if(req.user && req.user.role === 'librarian') {
+        next()
+    } else {
+        return res.status(401).json({
+            success: false,
+            message:"Not authorized as an librarian",
+            isAuthenticated: false
+        });
+    }
+}
+
+export const authorizedStaff = async (req, res, next) => {
+    if(req.user && req.user.role === 'staff') {
+        next()
+    } else {
+        return res.status(401).json({
+            success: false,
+            message:"Not authorized as an staff",
+            isAuthenticated: false
+        });
+    }
+}
