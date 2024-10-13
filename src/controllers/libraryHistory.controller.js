@@ -115,6 +115,12 @@ export const deleteLibraryHistory = async (req, res) => {
     const { id } = req.params;
 
     try {
+        const libraryHistory = await LibraryHistory.findById(id);
+        const student = await Student.findById(libraryHistory.student);
+        if (student) {
+            student.feesHistory.pull(id); 
+            await student.save();
+        }
         const deletedLibraryHistory = await LibraryHistory.findByIdAndDelete(id);
         if (!deletedLibraryHistory) {
             return res.status(404).json({
@@ -122,7 +128,10 @@ export const deleteLibraryHistory = async (req, res) => {
                 message: 'Library history not found'
              });
         }
-        res.status(204).send();
+        res.status(200).json({
+            success: true,
+            message: 'Library history deleted successfully'
+        });
     } catch (error) {
         res.status(500).json({
             success: false,
