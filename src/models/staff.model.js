@@ -22,6 +22,14 @@ const StaffSchema = new Schema({
     type: String,
     required: true,
   },
+  forgotPasswordToken: String,
+  forgotPasswordExpiry: Date,
+  isVerified: {
+      type: Boolean,
+      default: false
+  },
+  verificationToken: String,
+  verificationTokenExpiry: Date,
 }, { timestamps: true });
 
 const Staff = mongoose.model('Staff', StaffSchema);

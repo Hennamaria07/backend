@@ -22,6 +22,14 @@ const LibrarianSchema = new Schema({
     type: String,
     default: 'librarian',
   },
+  forgotPasswordToken: String,
+  forgotPasswordExpiry: Date,
+  isVerified: {
+      type: Boolean,
+      default: false
+  },
+  verificationToken: String,
+  verificationTokenExpiry: Date,
 }, { timestamps: true });
 
 const Librarian = mongoose.model('Librarian', LibrarianSchema);
