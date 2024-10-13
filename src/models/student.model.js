@@ -2,29 +2,67 @@ import mongoose, { Schema } from 'mongoose';
 
 const StudentSchema = new Schema({
   name: {
+      type: String,
+      required: true,
+      trim: true,
+  },
+  dateOfBirth: {
+    type: Date,
+    required: true,
+  },
+  gender: {
     type: String,
+    enum: ['Male', 'Female', 'Other'],
     required: true,
   },
   class: {
     type: String,
     required: true,
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
+  contactInfo: {
+    phone: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    address: {
+      street: { type: String, required: true },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      postalCode: { type: String, required: true },
+    },
   },
-  password: {
-    type: String,
-    required: true,
+  guardian: {
+    name: {
+      type: String,
+      required: true,
+    },
+    relationship: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
   },
-  role: {
-    type: String,
-    default: 'student',
+  enrollmentDate: {
+    type: Date,
+    default: Date.now,
   },
-  photo: {
-    publicId: String,
-    url: String,
+  status: {
+    type: String,
+    enum: ['Active', 'Inactive', 'Graduated', 'Transferred'],
+    default: 'Active',
   },
   libraryHistory: [{
     type: Schema.Types.ObjectId,
