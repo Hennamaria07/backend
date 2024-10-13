@@ -22,6 +22,14 @@ const AdminSchema = new Schema({
     type: String,
     default: 'admin',
   },
+  forgotPasswordToken: String,
+  forgotPasswordExpiry: Date,
+  isVerified: {
+      type: Boolean,
+      default: false
+  },
+  verificationToken: String,
+  verificationTokenExpiry: Date,
 }, { timestamps: true });
 
 const Admin = mongoose.model('Admin', AdminSchema);
