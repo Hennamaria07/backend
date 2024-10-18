@@ -6,7 +6,7 @@ import { authorizedAdminOrStaff, verifyUser } from "../middlewares/verifyjwt.mid
 const router = Router();
 
 
-router.route('/create').post(upload.single('photo'), createStudent);
+router.route('/create').post(verifyUser, upload.single('photo'), createStudent);
 router.route('/all').get(verifyUser, getAllStudents);
 router.route('/:id').get(verifyUser, authorizedAdminOrStaff, getStudentProfile)
 .put(verifyUser, authorizedAdminOrStaff, upload.single('photo'), updateStudent).delete(verifyUser, authorizedAdminOrStaff, deleteStudent);
