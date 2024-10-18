@@ -20,8 +20,8 @@ const FeesHistorySchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Paid'],
-    default: 'Pending',
+    enum: ['pending', 'paid'],
+    default: 'paid',
   },
   remarks: {
     type: String,

@@ -1,13 +1,11 @@
 import Librarian from "../models/librarian.model.js";
-import uploadCloudinary from "../utils/uploadOnCloudinary";
 import bcrypt from "bcryptjs";
-import { sendEmail, generateVerificationEmail } from "../utils/emailUtil.js";
 import generateToken from "../utils/generateToken.js";
 import { COOKIE_OPTIONS, EXPIRED_COOKIE_OPTIONS } from "../utils/constants.js";
-import { generatePasswordResetEmail } from "../utils/email.js";
+import { generatePasswordResetEmail, sendEmail } from "../utils/email.js";
 import deleteImage from "../utils/removeFromCloudinary.js";
-import otpGenerator from "otp-generator";
 import { v4 as uuidv4 } from "uuid";
+import uploadCloudinary from "../utils/uploadOnCloundinary.js";
 
 export const createLibrarian = async (req, res) => {
     const { name, email, password } = req.body;
@@ -42,13 +40,9 @@ export const createLibrarian = async (req, res) => {
             },
         });
 
-        const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-        const emailContent = generateVerificationEmail(otp, librarian._id);
-        await sendEmail(email, "Email Verification", emailContent);
-
         return res.status(201).json({
             success: true,
-            message: `A verification email has been sent.`,
+            message: `${librarian.name} created successfully`,
         });
     } catch (error) {
         return res.status(500).json({
@@ -57,68 +51,6 @@ export const createLibrarian = async (req, res) => {
         });
     }
 };
-
-export const emailVerification = async (req, res) => {
-    try {
-        const { otp } = req.body;
-        const { id } = req.params;
-
-        if (!otp) {
-            return res.status(400).json({
-                success: false,
-                message: "OTP is required"
-            });
-        }
-
-        const librarian = await Librarian.findById(id);
-        if (!librarian) {
-            return res.status(404).json({
-                success: false,
-                message: "Librarian not found"
-            });
-        }
-
-        if (librarian.isVerified) {
-            return res.status(400).json({
-                success: false,
-                message: "Librarian is already verified"
-            });
-        }
-
-        if (otp !== librarian.verificationToken) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid OTP"
-            });
-        }
-
-        if (librarian.verificationTokenExpiry < Date.now()) {
-            return res.status(401).json({
-                success: false,
-                message: "OTP has expired"
-            });
-        }
-
-        librarian.isVerified = true;
-        librarian.verificationToken = undefined;
-        librarian.verificationTokenExpiry = undefined;
-        await librarian.save();
-
-        const token = generateToken(librarian._id, librarian.role);
-
-        return res.status(200).cookie("token", token, COOKIE_OPTIONS)
-        .json({
-            success: true,
-            message: "Email verified successfully"
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-}
 
 export const signIn = async (req, res) => {
     try {
@@ -138,17 +70,7 @@ export const signIn = async (req, res) => {
                 message: "Librarian not found"
             });
         };
-        if(librarian.isVerified === false) {
-            const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-            librarian.verificationToken = otp;
-            librarian.verificationTokenExpiry = Date.now() + 300000;
-            const emailContent = generateVerificationEmail(otp, librarian._id);
-            await sendEmail(email, "Email Verification", emailContent);
-            return res.status(401).json({
-                success: false,
-                message: "Librarian is not verified. Please check your email for verification"
-            });
-        }
+
         const passwordCorrect = await bcrypt.compare(password, librarian.password);
         if (!passwordCorrect) {
             return res.status(401).json({
@@ -163,7 +85,7 @@ export const signIn = async (req, res) => {
             .cookie("token", token, COOKIE_OPTIONS)
             .json({
                 success: true,
-                message: "Librarian logged in successfully",
+                message: `${loggedLibrarian.name} logged in successfully`,
                 data: loggedLibrarian,
                 isAuthenticated: true,
                 token
@@ -217,7 +139,7 @@ export const librarianProfile = async (req, res) => {
 
 export const allLibrarians = async (req, res) => {
     try {
-        const librarians = await Librarian.find({isVerified: true}).select('-password');
+        const librarians = await Librarian.find().sort({ createdAt: -1 }).select('-password');
         return res.status(200).json({
             success: true,
             data: librarians
@@ -338,7 +260,7 @@ export const updateLibrarian = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Librarian updated successfully",
+            message: `${updateLibrarian.name} updated successfully`,
             data: updatedLibrarian
         });
     } catch (error) {
@@ -364,7 +286,7 @@ export const deleteLibrarian = async (req, res) => {
         await librarian.deleteOne();
         return res.status(200).json({
             success: true,
-            message: "Librarian deleted successfully"
+            message: `${librarian.name} deleted successfully`
         });
     } catch (error) {
         return res.status(500).json({

@@ -1,13 +1,11 @@
-import uploadCloudinary from "../utils/uploadOnCloundinary";
 import bcrypt from "bcryptjs";
-import { sendEmail, generateVerificationEmail } from "../utils/emailUtil.js";
 import generateToken from "../utils/generateToken.js";
 import { COOKIE_OPTIONS, EXPIRED_COOKIE_OPTIONS } from "../utils/constants.js";
-import { generatePasswordResetEmail } from "../utils/email.js";
 import deleteImage from "../utils/removeFromCloudinary.js";
-import otpGenerator from "otp-generator";
 import { v4 as uuidv4 } from "uuid";
 import Admin from "../models/admin.model.js";
+import uploadCloudinary from "../utils/uploadOnCloundinary.js";
+import { sendEmail } from "../utils/email.js";
 
 // Create Admin
 export const createAdmin = async (req, res) => {
@@ -43,13 +41,9 @@ export const createAdmin = async (req, res) => {
             },
         });
 
-        const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-        const emailContent = generateVerificationEmail(otp, admin._id);
-        await sendEmail(email, "Email Verification", emailContent);
-
         return res.status(201).json({
             success: true,
-            message: `A verification email has been sent.`,
+            message: `${admin.name} created successfully`,
         });
     } catch (error) {
         return res.status(500).json({
@@ -59,68 +53,6 @@ export const createAdmin = async (req, res) => {
     }
 };
 
-// Email Verification
-export const EmailVerification = async (req, res) => {
-    try {
-        const { otp } = req.body;
-        const { id } = req.params;
-
-        if (!otp) {
-            return res.status(400).json({
-                success: false,
-                message: "OTP is required"
-            });
-        }
-
-        const admin = await Admin.findById(id);
-        if (!admin) {
-            return res.status(404).json({
-                success: false,
-                message: "Admin not found"
-            });
-        }
-
-        if (admin.isVerified) {
-            return res.status(400).json({
-                success: false,
-                message: "Admin is already verified"
-            });
-        }
-
-        if (otp !== admin.verificationToken) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid OTP"
-            });
-        }
-
-        if (admin.verificationTokenExpiry < Date.now()) {
-            return res.status(401).json({
-                success: false,
-                message: "OTP has expired"
-            });
-        }
-
-        admin.isVerified = true;
-        admin.verificationToken = undefined;
-        admin.verificationTokenExpiry = undefined;
-        await admin.save();
-
-        const token = generateToken(admin._id, admin.role);
-
-        return res.status(200).cookie("token", token, COOKIE_OPTIONS)
-        .json({
-            success: true,
-            message: "Email verified successfully"
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
 
 // Sign In
 export const SignIn = async (req, res) => {
@@ -142,18 +74,6 @@ export const SignIn = async (req, res) => {
                 message: "Admin not found"
             });
         };
-
-        if (admin.isVerified === false) {
-            const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-            admin.verificationToken = otp;
-            admin.verificationTokenExpiry = Date.now() + 300000;
-            const emailContent = generateVerificationEmail(admin.verificationToken, admin._id);
-            await sendEmail(email, "Email Verification", emailContent);
-            return res.status(401).json({
-                success: false,
-                message: "Admin is not verified. Please check your email to verify your account"
-            });
-        }
 
         const passwordCorrect = await bcrypt.compare(password, admin.password);
         if (!passwordCorrect) {

@@ -15,6 +15,10 @@ const StudentSchema = new Schema({
     enum: ['Male', 'Female', 'Other'],
     required: true,
   },
+  photo: {
+    publicId: String,
+    url: String,
+  },
   class: {
     type: String,
     required: true,
@@ -22,36 +26,30 @@ const StudentSchema = new Schema({
   contactInfo: {
     phone: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
-      required: true,
       unique: true,
     },
     address: {
-      street: { type: String, required: true },
-      city: { type: String, required: true },
-      state: { type: String, required: true },
-      postalCode: { type: String, required: true },
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      postalCode: { type: String },
     },
   },
   guardian: {
     name: {
       type: String,
-      required: true,
     },
     relationship: {
       type: String,
-      required: true,
     },
     phone: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
-      required: true,
       unique: true,
     },
   },

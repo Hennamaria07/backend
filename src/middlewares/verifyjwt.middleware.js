@@ -28,9 +28,6 @@ export const verifyUser = async (req, res, next) => {
             case 'librarian':
                 user = await Librarian.findById(decodedToken._id);
                 break;
-            case 'student':
-                user = await Student.findById(decodedToken._id);
-                break;
             default:
                 return res.status(401).json({
                     success: false,
@@ -66,6 +63,18 @@ export const authorizedAdmin = async (req, res, next) => {
         return res.status(401).json({
             success: false,
             message:"Not authorized as an admin",
+            isAuthenticated: false
+        });
+    }
+}
+
+export const authorizedAdminOrStaff = async (req, res, next) => {
+    if(req.user && (req.user.role === 'admin' || req.user.role === 'staff')) {
+        next()
+    } else {
+        return res.status(401).json({
+            success: false,
+            message:"Not authorized as an admin or staff",
             isAuthenticated: false
         });
     }

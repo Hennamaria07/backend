@@ -24,10 +24,6 @@ const AdminSchema = new Schema({
   },
   forgotPasswordToken: String,
   forgotPasswordExpiry: Date,
-  isVerified: {
-      type: Boolean,
-      default: false
-  },
   verificationToken: String,
   verificationTokenExpiry: Date,
 }, { timestamps: true });

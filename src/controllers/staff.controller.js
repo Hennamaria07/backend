@@ -1,18 +1,15 @@
 import Staff from "../models/staff.model.js";
-import uploadCloudinary from "../utils/uploadOnCloundinary";
 import bcrypt from "bcryptjs";
-import { sendEmail, generateVerificationEmail } from "../utils/emailUtil.js";
 import generateToken from "../utils/generateToken.js";
 import { COOKIE_OPTIONS, EXPIRED_COOKIE_OPTIONS } from "../utils/constants.js";
-import { generatePasswordResetEmail } from "../utils/email.js";
+import { generatePasswordResetEmail, sendEmail } from "../utils/email.js";
 import deleteImage from "../utils/removeFromCloudinary.js";
-import otpGenerator from "otp-generator";
 import { v4 as uuidv4 } from "uuid";
+import uploadCloudinary from "../utils/uploadOnCloundinary.js";
 
 export const createStaff = async (req, res) => {
     const { name, email, password } = req.body;
     const filePath = req?.file?.path;
-
     if (![name, email, password, filePath].every(field => field)) {
         return res.status(400).json({
             success: false,
@@ -42,13 +39,9 @@ export const createStaff = async (req, res) => {
             },
         });
 
-        const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-        const emailContent = generateVerificationEmail(otp, staff._id);
-        await sendEmail(email, "Email Verification", emailContent);
-
         return res.status(201).json({
             success: true,
-            message: `A verification email has been sent.`,
+            message: `${staff.name} created successfully`,
         });
     } catch (error) {
         return res.status(500).json({
@@ -58,112 +51,39 @@ export const createStaff = async (req, res) => {
     }
 };
 
-export const EmailVerification = async (req, res) => {
-    try {
-        const { otp } = req.body;
-        const { id } = req.params;
-
-        if (!otp) {
-            return res.status(400).json({
-                success: false,
-                message: "OTP is required"
-            });
-        }
-
-        const staff = await Staff.findById(id);
-        if (!staff) {
-            return res.status(404).json({
-                success: false,
-                message: "Staff not found"
-            });
-        }
-
-        if (staff.isVerified) {
-            return res.status(400).json({
-                success: false,
-                message: "Staff is already verified"
-            });
-        }
-
-        if (otp !== staff.verificationToken) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid OTP"
-            });
-        }
-
-        if (staff.verificationTokenExpiry < Date.now()) {
-            return res.status(401).json({
-                success: false,
-                message: "OTP has expired"
-            });
-        }
-
-        staff.isVerified = true;
-        staff.verificationToken = undefined;
-        staff.verificationTokenExpiry = undefined;
-        await staff.save();
-
-        const token = generateToken(loggedStaff._id, loggedStaff.role);
-
-        return res.status(200).cookie("token", token, COOKIE_OPTIONS)
-        .json({
-            success: true,
-            message: "Email verified successfully"
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-}
-
 export const SignIn = async (req, res) => {
     try {
         const { email, password } = req.body;
-
-        if ([email, password].some((field) => !field || field?.trim() === "")) {
+        if ([email, password].some((field) => !field || field.length === 0)) {
             return res.status(400).json({
                 success: false,
                 message: 'All fields are required'
             });
         };
         const staff = await Staff.findOne({ email })
-
         if (!staff) {
             return res.status(404).json({
                 success: false,
                 message: "Staff not found"
             });
         };
-        if(staff.isVerified === false) {
-            const otp = otpGenerator.generate(4, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
-            staff.verificationToken = otp;
-            staff.verificationTokenExpiry = Date.now() + 300000;
-            const emailContent = generateVerificationEmail(token);
-            await sendEmail(email, "Email Verification", emailContent);
-            return res.status(401).json({
-                success: false,
-                message: "Staff is not verified. Please check your email for verify your account"
-            });
-        }
+
         const passwordCorrect = await bcrypt.compare(password, staff.password);
+        
         if (!passwordCorrect) {
             return res.status(401).json({
                 success: false,
                 message: "Invalid credential"
             });
         }
-        const loggedStaff = await Staff.findById(Staff._id).select('-password')
+        const loggedStaff = await Staff.findById(staff._id).select('-password')
         const token = generateToken(loggedStaff._id, loggedStaff.role);
 
         return res.status(200)
             .cookie("token", token, COOKIE_OPTIONS)
             .json({
                 success: true,
-                message: "Staff login successfully",
+                message: `${staff.name} login successfully`,
                 data: loggedStaff,
                 isAuthenticated: true,
                 token
@@ -218,7 +138,7 @@ export const staffProfile = async (req, res) => {
 
 export const allStaff = async (req, res) => {
     try {
-        const staff = await Staff.find({isVerified: true}).select('-password');
+        const staff = await Staff.find().sort({ createdAt: -1 }).select('-password');
         return res.status(200).json({
             success: true,
             data: staff
@@ -318,7 +238,6 @@ export const updateProfile = async (req, res) => {
                 message: "Unauthorized staff"
             });
         }
-
         staff.name = req.body.name;
         staff.email = req.body.email;
         staff.role = req.body.role;
@@ -348,7 +267,7 @@ export const updateProfile = async (req, res) => {
         const updatedStaff = await staff.save();
         return res.status(200).json({
             success: true,
-            message: "Staff updated successfully",
+            message: `${staff.name} updated successfully`,
             data: {
                 _id: updatedStaff._id,
                 name: updatedStaff.name,
@@ -376,10 +295,10 @@ export const deleteStaff = async (req, res) => {
             });
         }
         await deleteImage(staff.photo.publicId);
-        await staff.remove();
+        await Staff.findByIdAndDelete(id);
         return res.status(200).json({
             success: true,
-            message: "Staff deleted successfully"
+            message: `${staff.name} deleted successfully`
         });
     } catch (error) {
         return res.status(500).json({

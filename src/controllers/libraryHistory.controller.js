@@ -45,7 +45,7 @@ export const createLibraryHistory = async (req, res) => {
 
 export const getLibraryHistories = async (req, res) => {
     try {
-        const libraryHistories = await LibraryHistory.find().populate('student', 'name class');
+        const libraryHistories = await LibraryHistory.find().populate('student', 'name class photo');
         res.status(200).json({
             success: true,
             data: libraryHistories

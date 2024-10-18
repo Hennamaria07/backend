@@ -1,5 +1,6 @@
-import FeesHistory from '../models/FeesHistory.js';
-import Student from '../models/Student.js'; // Assuming the Student model is in the same directory
+import Student from "../models/student.model.js";
+import FeesHistory from "../models/feesHistory.model.js";
+
 
 // Create Fees History
 export const createFeesHistory = async (req, res) => {
@@ -51,7 +52,7 @@ export const createFeesHistory = async (req, res) => {
 // Get all Fees History
 export const getAllFeesHistory = async (req, res) => {
     try {
-        const feesHistory = await FeesHistory.find().populate('student', 'name email');
+        const feesHistory = await FeesHistory.find().populate('student', 'name email photo');
 
         return res.status(200).json({
             success: true,
@@ -87,7 +88,7 @@ export const getFeesHistoryByStudentId = async (req, res) => {
 // Update Fees History
 export const updateFeesHistory = async (req, res) => {
     const { id } = req.params;
-
+    console.log('ree--->', req.body);
     try {
         const feesHistory = await FeesHistory.findById(id);
         if (!feesHistory) {
@@ -97,13 +98,14 @@ export const updateFeesHistory = async (req, res) => {
             });
         }
 
-        const { feeType, amount, paymentDate, remarks } = req.body;
+        const { feeType, amount, paymentDate, remarks, status } = req.body;
 
         // Update fields conditionally
         if (feeType) feesHistory.feeType = feeType;
         if (amount) feesHistory.amount = amount;
         if (paymentDate) feesHistory.paymentDate = paymentDate;
         if (remarks) feesHistory.remarks = remarks;
+        if (status) feesHistory.status = status;
 
         await feesHistory.save();
 
