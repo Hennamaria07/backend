@@ -41,11 +41,11 @@ Ensure the following tools are installed on your machine:
     ```plaintext
     PORT=4000
     MONGODB_URI=mongodb+srv://hennamaria2001:3XjkCcoERLWL4OdD@cluster0.y3tcx.mongodb.net/schoolManagement
-    ACCESS_TOKEN_SECRET_KEY=Hi8C6mp9?/SSFWN4ozt?UhF0mFn-!0HoOxIJ4KLfMa4WAXgw=Mg2cxo-0KF5WoUt
+    ACCESS_TOKEN_SECRET_KEY=secret
     ACCESS_TOKEN_EXPIRY=1d
-    CLOUDINARY_CLOUD_NAME=freestyle07
-    CLOUDINARY_CLOUD_API_KEY=286239639171635
-    CLOUDINARY_CLOUD_API_SECERT=4P3a70oZ_TsyPL84AObN9QjC77Y
+    CLOUDINARY_CLOUD_NAME=yourname
+    CLOUDINARY_CLOUD_API_KEY=api
+    CLOUDINARY_CLOUD_API_SECERT=secert
     ```
 
     Replace the values with your actual credentials if needed.
